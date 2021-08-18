@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CC.ElectronicCommerce.Interface\CC.ElectronicCommerce.Interface.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.Service\CC.ElectronicCommerce.Service.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.WebCore\CC.ElectronicCommerce.WebCore.csproj" />
+  </ItemGroup>
+
+</Project>

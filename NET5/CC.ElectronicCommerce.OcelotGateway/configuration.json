@@ -1,0 +1,921 @@
+////*****************************单地址多实例负载均衡+Consul********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "UpstreamPathTemplate": "/T/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "UseServiceDiscovery": true,
+//      "ServiceName": "ZhaoxiService", //consul服务名称
+//      "LoadBalancerOptions": {
+//        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+//      }
+//    }
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "http://127.0.0.1:6299", //网关对外地址
+//    "ServiceDiscoveryProvider": {
+//      "Host": "47.95.2.2",
+//      "Port": 8089,
+//      "Type": "Consul" //由Consul提供服务发现, 每次请求去consul
+//    } //Ocelot没有支持配置多个Consul
+
+//    //,"ServiceDiscoveryProvider": {
+//    //  "Host": "localhost",
+//    //  "Port": 8500,
+//    //  "Type": "PollConsul", //由Consul提供服务发现,
+//    //  "PollingInterval": 1000 //轮询consul,频率毫秒--down掉是不知道的
+//    //  //"Token": "footoken"//需要ACL的话
+//    //}
+//  }
+//}
+
+
+
+//*****************************Ocelot+Consul********************************
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/auth/{url}", //上游请求地址--网关
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "AuthenticationCenter",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/auth/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/auth/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "AuthenticationCenter",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http",
+      "RateLimitOptions": {
+        //"ClientWhitelist": [ "eleven", "seven" ], //白名单 ClientId 区分大小写
+        "EnableRateLimiting": true,
+        "Period": "1s", //1s, 5m, 1h, 1d
+        "PeriodTimespan": 10, //多少秒之后客户端可以重试
+        "Limit": 10 //统计时间段内允许的最大请求数量
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/user/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "UserMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/user/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/user/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "UserMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/search/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "GoodsSearchMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/search/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/search/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "GoodsSearchMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/category/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "CategoryMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/category/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/category/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "CategoryMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/cart/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "CartMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/cart/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/cart/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "CartMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/brand/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "BrandMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/brand/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/brand/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "BrandMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/order/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "OrderMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/order/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/order/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "OrderMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/stock/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "StockMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/stock/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/stock/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "StockMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/pay/{url}", //网关地址--url变量
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "PayMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/pay/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/pay/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "PayMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    },
+    {
+      "UpstreamPathTemplate": "/api/seckill/{url}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "SeckillMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/api/seckill/{url}", //服务地址--url变量
+      "DownstreamScheme": "http",
+      "DownstreamHeaderTransform": {
+        "Access-Control-Allow-Origin": "*", //不存在就添加
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/seckill/swagger/v1/swagger.json",
+      "UpstreamHttpMethod": [ "Get" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "SeckillMicroservice",
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+      },
+      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+      "DownstreamScheme": "http"
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://127.0.0.1:6900", //网关对外地址
+    "ServiceDiscoveryProvider": {
+      "Host": "192.168.2.128",
+      "Port": 8500,
+      "Type": "Consul" //由Consul提供服务发现, 每次请求去consul
+    },
+    "RateLimitOptions": {
+      "QuotaExceededMessage": "Too many requests, maybe later? 11", // 当请求过载被截断时返回的消息
+      "HttpStatusCode": 666 // 当请求过载被截断时返回的http status
+      //"ClientIdHeader": "client_id" // 用来识别客户端的请求头，默认是 ClientId
+    }
+
+    //,"ServiceDiscoveryProvider": {
+    //  "Host": "localhost",
+    //  "Port": 8500,
+    //  "Type": "PollConsul", //由Consul提供服务发现,
+    //  "PollingInterval": 1000 //轮询consul,频率毫秒--down掉是不知道的
+    //  //"Token": "footoken"//需要ACL的话
+    //}
+  }
+}
+
+////*****************************单地址--无Consul********************************
+//{
+//  "Routes": [
+//    {
+//      "UpstreamPathTemplate": "/api/auth/{url}", //上游请求地址--网关
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7200 //网关api 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/auth/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 7200 //网关api 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/user/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //userapi 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/user/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/user/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //网关api 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/search/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5730 //userapi 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/search/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/search/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5730 //网关api 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/category/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5732 //category 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/category/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/category/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5732 //category 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/cart/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5733 //cart 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/cart/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/cart/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5733 //category 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/brand/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5734 //brand 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/brand/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/brand/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5734 //brand 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/order/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5729 //order 端口---80为了穿透-为了微信
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/order/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/order/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5729 //order 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/stock/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5735 //stock 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/stock/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/stock/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5735 //stock 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    },
+//    {
+//      "UpstreamPathTemplate": "/api/pay/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post", "Put", "PATCH", "Delete", "Options" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "192.168.3.103",
+//          "Port": 80 //pay 端口---80为了穿透-为了微信---5736
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/api/pay/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHeaderTransform": {
+//        "Access-Control-Allow-Origin": "*", //不存在就添加
+//        "Access-Control-Allow-Methods": "*",
+//        "Access-Control-Allow-Headers": "*"
+//      }
+//    },
+//    {
+//      "UpstreamPathTemplate": "/pay/swagger/v1/swagger.json",
+//      "UpstreamHttpMethod": [ "Get" ],
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "192.168.3.103",
+//          "Port": 80 //pay 端口
+//        }
+//      ],
+//      "DownstreamPathTemplate": "/swagger/v1/swagger.json",
+//      "DownstreamScheme": "http"
+//    }
+//  ]
+//}
+
+////*****************************单地址全匹配********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/{url}", //网关地址--url变量   //冲突的还可以加权重Priority
+//      "UpstreamHttpMethod": [ "Get", "Post" ]
+//    }
+//  ]
+//}
+
+////*****************************多地址多实例********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T5726/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ]
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5727 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T5727/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ]
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5728 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T5728/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ]
+//    }
+//  ]
+//}
+
+//////MVC的路由规则是近水楼台先得月--
+////*****************************路由冲突+带权匹配********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/{url}", //网关地址--url变量   //冲突的还可以加权重Priority
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "Priority": 0 //默认是0 加个1
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/users/get?id={id}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5727 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/api/users/get/{id}", //网关地址--url变量   //冲突的还可以加权重Priority
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "Priority": 1 //默认是0 加个1
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/users/{url}?id={id}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5728 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/api/users/{url}/{id}", //网关地址--url变量   //冲突的还可以加权重Priority
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "Priority": 2 //默认是0 加个1
+//    }
+//  ]
+//}
+
+////*****************************单地址多实例负载均衡********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "47.95.2.2",
+//          "Port": 5726
+//        }, //Ocelot负载均衡
+//        {
+//          "Host": "47.95.2.2",
+//          "Port": 5727
+//        },
+//        {
+//          "Host": "47.95.2.2",
+//          "Port": 5728
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T/{url}", //网关地址--url变量   //冲突的还可以加权重Priority
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "LoadBalancerOptions": {
+//        "Type": "RoundRobin" //轮询 //"LeastConnection" //最少连接数的服务器  "NoLoadBalance" //不负载均衡  //"CookieStickySessions" //会话粘滞  //
+//      }
+//      //"LoadBalancerOptions": {
+//      //  "Type": "CookieStickySessions",
+//      //  "Key": "ASP.NET_SessionId",
+//      //  "Expiry": 1800000
+//      //}
+//    }
+//  ]
+//}
+
+////*****************************单地址多实例负载均衡+Consul********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "UpstreamPathTemplate": "/T/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "UseServiceDiscovery": true,
+//      "ServiceName": "ZhaoxiService", //consul服务名称
+//      "LoadBalancerOptions": {
+//        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+//      }
+//    }
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "http://127.0.0.1:6299", //网关对外地址
+//    "ServiceDiscoveryProvider": {
+//      "Host": "47.95.2.2",
+//      "Port": 8089,
+//      "Type": "Consul" //由Consul提供服务发现, 每次请求去consul
+//    } //Ocelot没有支持配置多个Consul
+
+//    //,"ServiceDiscoveryProvider": {
+//    //  "Host": "localhost",
+//    //  "Port": 8500,
+//    //  "Type": "PollConsul", //由Consul提供服务发现,
+//    //  "PollingInterval": 1000 //轮询consul,频率毫秒--down掉是不知道的
+//    //  //"Token": "footoken"//需要ACL的话
+//    //}
+//  }
+//}
+
+////*****************************Consul+缓存Cache********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "UpstreamPathTemplate": "/T/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "UseServiceDiscovery": true,
+//      "ServiceName": "ZhaoxiService", //consul服务名称
+//      "LoadBalancerOptions": {
+//        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+//      },
+//      "FileCacheOptions": {
+//        "TtlSeconds": 15, //Second
+//        "Region": "UserCache" //可以调用Api缓存清理
+//      }
+//    }
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "http://127.0.0.1:6299", //网关对外地址
+//    "ServiceDiscoveryProvider": {
+//      "Host": "47.95.2.2",
+//      "Port": 8089,
+//      "Type": "Consul" //由Consul提供服务发现, 每次请求去consul
+//    }
+//    //"ServiceDiscoveryProvider": {
+//    //  "Host": "localhost",
+//    //  "Port": 8500,
+//    //  "Type": "PollConsul", //由Consul提供服务发现,
+//    //  "PollingInterval": 1000 //轮询consul,频率毫秒--down掉是不知道的
+//    //  //"Token": "footoken"//需要ACL的话
+//    //}
+//  }
+//}
+
+////*****************************超时+限流+熔断+降级+Consul+Polly********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/{url}", //服务地址--url变量
+//      "DownstreamScheme": "http",
+//      "UpstreamPathTemplate": "/T/{url}", //网关地址--url变量
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "UseServiceDiscovery": true,
+//      "ServiceName": "ZhaoxiService", //consul服务名称
+//      "LoadBalancerOptions": {
+//        "Type": "RoundRobin" //轮询      LeastConnection-最少连接数的服务器   NoLoadBalance不负载均衡
+//      },
+//      "RateLimitOptions": {
+//        "ClientWhitelist": [ "eleven", "seven" ], //白名单 ClientId 区分大小写
+//        "EnableRateLimiting": true,
+//        "Period": "5m", //1s, 5m, 1h, 1d
+//        "PeriodTimespan": 30, //多少秒之后客户端可以重试
+//        "Limit": 5 //统计时间段内允许的最大请求数量
+//      },
+//      "AuthenticationOptions": {
+//        "AuthenticationProviderKey": "UserGatewayKey",
+//        "AllowedScopes": []
+//      },
+//      "QoSOptions": {
+//        "ExceptionsAllowedBeforeBreaking": 3, //允许多少个异常请求
+//        "DurationOfBreak": 10000, // 熔断的时间，单位为ms
+//        "TimeoutValue": 2000 //单位ms 如果下游请求的处理时间超过多少则自如将请求设置为超时 默认90秒
+//      }
+//      //"FileCacheOptions": {
+//      //  "TtlSeconds": 15,
+//      //  "Region": "UserCache" //可以调用Api清理
+//      //}
+//    }
+//  ],
+//  "GlobalConfiguration": {
+//    "BaseUrl": "http://127.0.0.1:6299", //网关对外地址
+//    "ServiceDiscoveryProvider": {
+//      "Host": "47.95.2.2",
+//      "Port": 8089,
+//      "Type": "Consul" //由Consul提供服务发现
+//    },
+//    "RateLimitOptions": {
+//      "QuotaExceededMessage": "Too many requests, maybe later? 11", // 当请求过载被截断时返回的消息
+//      "HttpStatusCode": 666, // 当请求过载被截断时返回的http status
+//      //"ClientIdHeader": "client_id" // 用来识别客户端的请求头，默认是 ClientId
+//    }
+//  }
+//}
+
+////*****************************请求聚合Aggregator********************************
+//{
+//  "Routes": [
+//    {
+//      "DownstreamPathTemplate": "/api/users/all",
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5726 //服务端口
+//        } //可以多个，自行负载均衡
+//      ],
+//      "UpstreamPathTemplate": "/T5726/users/all",
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "key": "T5726"
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/users/all",
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5727 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T5727/users/all",
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "key": "T5727"
+//    },
+//    {
+//      "DownstreamPathTemplate": "/api/users/all",
+//      "DownstreamScheme": "http",
+//      "DownstreamHostAndPorts": [
+//        {
+//          "Host": "localhost",
+//          "Port": 5728 //服务端口
+//        }
+//      ],
+//      "UpstreamPathTemplate": "/T5728/users/all",
+//      "UpstreamHttpMethod": [ "Get", "Post" ],
+//      "key": "T5728"
+//    }
+//  ],
+//  "Aggregates": [
+//    {
+//      "RouteKeys": [
+//        "T5726",
+//        "T5727",
+//        "T5728"
+//      ],
+//      "UpstreamPathTemplate": "/UserAggregator", //如果某个404 是不影响返回，当成null
+//      "Aggregator": "CustomUserAggregator" //自定义聚合器
+//    }
+//  ]
+//}
+

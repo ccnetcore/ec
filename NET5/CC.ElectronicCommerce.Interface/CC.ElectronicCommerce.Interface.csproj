@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CC.ElectronicCommerce.Common\CC.ElectronicCommerce.Common.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.DTOModel\CC.ElectronicCommerce.DTOModel.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.Model\CC.ElectronicCommerce.Model.csproj" />
+  </ItemGroup>
+
+</Project>
