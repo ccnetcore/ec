@@ -1,0 +1,748 @@
+
+
+<template>
+  <div>
+    <div id="searchApp">
+      <div id="nav-bottom">
+        <app-top></app-top>
+      </div>
+
+      <!--list-content-->
+      <div class="main">
+        <div class="py-container">
+          <div class="bread">
+            <!--面包屑-->
+            <ul class="fl sui-breadcrumb">
+              <li><span>全部结果:</span></li>
+              <li v-for="(c, i) in breads" :key="i">
+                <a href="#" v-if="i < 2">{{ c.name }}</a>
+                <span v-else>{{ c.name }}</span>
+              </li>
+            </ul>
+            <!--已选择过滤项-->
+            <ul class="tags-choose">
+              <li
+                class="tag"
+                v-for="(v, k) in search.filter"
+                :key="k"
+                v-if="k !== 'cid3' && k !== 'key'"
+                
+              >
+                {{ k === "brandId" ? "品牌" : k }}:<span style="color: red">{{
+                  getFilterValue(k, v)
+                }}</span>
+                <span></span>
+                <i class="sui-icon icon-tb-close" @click="removeFilter(k)"></i>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <!--selector-->
+          <div class="clearfix selector">
+            <div
+              class="type-wrap"
+              v-for="(f, i) in remainFilters"
+              :key="i"
+        
+              v-show="i < 5 || show"
+            >
+                  <!-- v-if="f.k !== 'brandId'" -->
+              <div class="fl key">{{ f.k === "cid3" ? "分类" : f.k }}</div>
+              <div class="fl value">
+                <ul class="type-list">
+                  <li
+                    v-for="(option, j) in f.options"
+                    :key="j"
+                    @click="selectFilter(f.k, option)"
+                  >
+                    <a v-if="f.unit !== ''">{{ option.name }}{{ f.unit }}</a>
+                    <a v-else>{{ option.name }}</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="fl ext"></div>
+            </div>
+            <div class="type-wrap logo" v-else>
+              <div class="fl key brand">
+                {{ f.k === "brandId" ? "品牌" : f.k }}
+              </div>
+              <div class="value logos">
+                <ul class="logo-list">
+                  <li
+                    v-for="(option, j) in f.options"
+                    :key="j"
+                    v-if="option.image"
+                    @click="selectFilter(f.k, option)"
+                  >
+                    <img v-lazy="option.image" />
+                  </li>
+                  <li style="text-align: center" v-else>
+                    <a
+                      style="line-height: 30px; font-size: 12px"
+                      href="javascript:void(0);"
+                      >{{ option.name }}</a
+                    >
+                  </li>
+                </ul>
+              </div>
+              <div class="fl ext">
+                <a href="javascript:void(0);" class="sui-btn">多选</a>
+              </div>
+            </div>
+            <div class="type-wrap">
+              <div class="fl key">价格</div>
+              <div class="fl value">
+                <ul class="type-list">
+                  <li v-for="(i, v) in priceInterval" :key="i" @click="priceFilter(v)">
+                    <a>{{ v }}</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="fl ext"></div>
+            </div>
+            <div class="type-wrap" style="text-align: center">
+              <v-btn small flat @click="show = true" v-show="!show">
+                更多<v-icon>arrow_drop_down</v-icon>
+              </v-btn>
+              <v-btn small="" flat @click="show = false" v-show="show">
+                收起<v-icon>arrow_drop_up</v-icon>
+              </v-btn>
+            </div>
+          </div>
+          <!--details-->
+          <div class="details">
+            <div class="sui-navbar">
+              <div class="navbar-inner filter">
+                <ul class="sui-nav">
+                  <li
+                    :class="{ active: !search.sortBy }"
+                    @click="search.sortBy = ''"
+                  >
+                    <a href="javascript:;">综合</a>
+                  </li>
+                  <li>
+                    <a href="javascript:;">销量</a>
+                  </li>
+                  <li
+                    @click="search.sortBy = 'createTime'"
+                    :class="{ active: search.sortBy === 'createTime' }"
+                  >
+                    <a href="javascript:;">新品</a>
+                  </li>
+                  <li>
+                    <a href="javascript:;">评价</a>
+                  </li>
+                  <li
+                    @click="
+                      search.sortBy = 'price';
+                      search.descending = !search.descending;
+                    "
+                    :class="{ active: search.sortBy === 'price' }"
+                  >
+                    <a href="javascript:;">
+                      价格
+                      <v-icon v-show="search.descending"
+                        >arrow_drop_down</v-icon
+                      >
+                      <v-icon v-show="!search.descending">arrow_drop_up</v-icon>
+                    </a>
+                  </li>
+                </ul>
+                <div class="top-pagination">
+                  <span
+                    >共 <i style="color: #222">{{ total }}+</i> 商品</span
+                  >
+                  <span
+                    ><i style="color: red">{{ search.page }}</i
+                    >/{{ totalPage }}</span
+                  >
+                  <a
+                    class="btn-arrow"
+                    @click="prevPage"
+                    style="display: inline-block"
+                    >&lt;</a
+                  >
+                  <a
+                    class="btn-arrow"
+                    @click="nextPage"
+                    style="display: inline-block"
+                    >&gt;</a
+                  >
+                </div>
+              </div>
+            </div>
+            <!--搜索结果展示-->
+            <div class="goods-list">
+              <ul class="yui3-g">
+                <li class="yui3-u-1-5" v-for="(i, goods) in goodsList" :key="i">
+                  <div class="list-wrap">
+                    <div class="p-img">
+                      <!--<a :href=" 'item/' + goods.id +'.html'" target="_blank"><img :src="goods.selected.image" height="200"/></a>-->
+                      <a :href="'item/' + goods.id + '.html'" target="_blank"
+                        ><img :src="goods.selected.image" height="200"
+                      /></a>
+                      <!--多sku图片列表-->
+                      <ul class="skus">
+                        <li
+                          :class="{ selected: sku.id == goods.selected.id }"
+                          v-for="sku in goods.skus"
+                          :key="sku.id"
+                          @mouseEnter="goods.selected = sku"
+                        >
+                          <img :src="sku.image" />
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="price">
+                      <strong>
+                        <em>¥</em>
+                        <i>{{ yt.formatPrice(goods.selected.price) }}</i>
+                      </strong>
+                    </div>
+                    <div class="attr">
+                      <em>{{ goods.selected.title }}</em>
+                    </div>
+                    <div class="cu">
+                      <em><span>促</span>{{ goods.subTitle }}</em>
+                    </div>
+                    <div class="commit">
+                      <i class="command">已有2000人评价</i>
+                    </div>
+                    <div class="operate">
+                      <a
+                        href="success-cart.html"
+                        target="_blank"
+                        class="sui-btn btn-bordered btn-danger"
+                        >加入购物车</a
+                      >
+                      <a href="javascript:void(0);" class="sui-btn btn-bordered"
+                        >对比</a
+                      >
+                      <a href="javascript:void(0);" class="sui-btn btn-bordered"
+                        >关注</a
+                      >
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="fr">
+              <div class="sui-pagination pagination-large">
+                <ul>
+                  <li class="prev disabled">
+                    <a @click="prevPage">«上一页</a>
+                  </li>
+                  <li
+                    :class="{ active: index(i) === search.page }"
+                    v-for="i in Math.min(5, totalPage)"
+                    :key="i"
+                  >
+                    <a @click="search.page = index(i)">{{ index(i) }}</a>
+                  </li>
+                  <li class="dotted" v-show="totalPage > 5">
+                    <span>...</span>
+                  </li>
+                  <li
+                    :class="{ next: true, disabled: search.page === totalPage }"
+                  >
+                    <a @click="nextPage">下一页»</a>
+                  </li>
+                </ul>
+                <div>
+                  <span>共{{ totalPage }}页&nbsp;</span>
+                  <span>
+                    到第
+                    <input type="text" class="page-num" ref="page" />
+                    页
+                    <button class="page-confirm" @click="navPage">确定</button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!--hotsale-->
+          <div class="clearfix hot-sale">
+            <h4 class="title">热卖商品</h4>
+            <div class="hot-list">
+              <ul class="yui3-g">
+                <li class="yui3-u-1-4">
+                  <div class="list-wrap">
+                    <div class="p-img">
+                      <img src="img/like_01.png" />
+                    </div>
+                    <div class="attr">
+                      <em>Apple苹果iPhone 6s (A1699)</em>
+                    </div>
+                    <div class="price">
+                      <strong>
+                        <em>¥</em>
+                        <i>4088.00</i>
+                      </strong>
+                    </div>
+                    <div class="commit">
+                      <i class="command">已有700人评价</i>
+                    </div>
+                  </div>
+                </li>
+                <li class="yui3-u-1-4">
+                  <div class="list-wrap">
+                    <div class="p-img">
+                      <img src="img/like_03.png" />
+                    </div>
+                    <div class="attr">
+                      <em>金属A面，360°翻转，APP下单省300！</em>
+                    </div>
+                    <div class="price">
+                      <strong>
+                        <em>¥</em>
+                        <i>4088.00</i>
+                      </strong>
+                    </div>
+                    <div class="commit">
+                      <i class="command">已有700人评价</i>
+                    </div>
+                  </div>
+                </li>
+                <li class="yui3-u-1-4">
+                  s
+                  <div class="list-wrap">
+                    <div class="p-img">
+                      <img src="img/like_04.png" />
+                    </div>
+                    <div class="attr">
+                      <em>256SSD商务大咖，完爆职场，APP下单立减200</em>
+                    </div>
+                    <div class="price">
+                      <strong>
+                        <em>¥</em>
+                        <i>4068.00</i>
+                      </strong>
+                    </div>
+                    <div class="commit">
+                      <i class="command">已有20人评价</i>
+                    </div>
+                  </div>
+                </li>
+                <li class="yui3-u-1-4">
+                  <div class="list-wrap">
+                    <div class="p-img">
+                      <img src="img/like_02.png" />
+                    </div>
+                    <div class="attr">
+                      <em>Apple苹果iPhone 6s (A1699)</em>
+                    </div>
+                    <div class="price">
+                      <strong>
+                        <em>¥</em>
+                        <i>4088.00</i>
+                      </strong>
+                    </div>
+                    <div class="commit">
+                      <i class="command">已有700人评价</i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- <script src="https://unpkg.com/vue-lazyload/vue-lazyload.js"></script> -->
+    <!-- <script type="text/javascript">
+        Vue.use(VueLazyload, {
+            preLoad: 1.3,
+            error: "",   //请求失败后显示的图片
+            loading: "",   //加载的loading过渡图片
+            attempt: 1     // 加载图片数量
+        }); -->
+
+    <!-- </script> -->
+    <!-- 底部栏位 -->
+    <!--页面底部，由js动态加载-->
+    <div class="clearfix footer"></div>
+    <!-- <script type="text/javascript">$(".footer").load("foot.html");</script> -->
+    <!--页面底部END-->
+
+    <!-- // 购物车单元格 模板 -->
+    <!-- <script type="text/template" id="tbar-cart-item-template">
+    <div class="tbar-cart-item">
+        <div class="jtc-item-promo">
+            <em class="promo-tag promo-mz">满赠<i class="arrow"></i></em>
+            <div class="promo-text">已购满600元，您可领赠品</div>
+        </div>
+        <div class="jtc-item-goods">
+            <span class="p-img"><a href="#" target="_blank"><img src="{2}" alt="{1}" height="50" width="50" /></a></span>
+            <div class="p-name">
+                <a href="#">{1}</a>
+            </div>
+            <div class="p-price"><strong>¥{3}</strong>×{4}</div>
+            <a href="#none" class="p-del J-del">删除</a>
+        </div>
+    </div>
+</script> -->
+    <!--侧栏面板结束-->
+    <!-- <script type="text/javascript" src="./js/plugins/jquery/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#service").hover(function () {
+            $(".service").show();
+        }, function () {
+            $(".service").hide();
+        });
+        $("#shopcar").hover(function () {
+            $("#shopcarlist").show();
+        }, function () {
+            $("#shopcarlist").hide();
+        });
+
+    })
+</script>
+<script type="text/javascript" src="./js/model/cartModel.js"></script>
+<script type="text/javascript" src="./js/czFunction.js"></script>
+<script type="text/javascript" src="./js/plugins/jquery.easing/jquery.easing.min.js"></script>
+<script type="text/javascript" src="./js/plugins/sui/sui.min.js"></script>
+<script type="text/javascript" src="./js/widget/cartPanelView.js"></script> -->
+  </div>
+</template>
+
+<script>
+import AppTop from "../components/Top.vue";
+export default {
+  data() {
+    return {
+      yt: "",
+      search: {
+        key: "", //搜索页面的关键字
+        page: 1,
+        filter: {}, //发送到后台的过滤项
+      },
+      goodsList: [], //接收搜索到的结果
+      total: 0, //总条数
+      totalPage: 0, //总页数
+      filters: [], // 过滤参数集合
+      show: false, //是否展开更多过滤条件
+      breads: "", //面包屑
+      price: "", //价格区间
+    };
+  },
+  components: {
+    AppTop
+  },
+  computed: {
+    remainFilters() {
+      const keys = Object.keys(this.search.filter);
+      if (this.search.filter.cid3) {
+        keys.push("cid3");
+      }
+      if (this.search.filter.brandId) {
+        keys.push("brandId");
+      }
+      //使用filter方法进行过滤
+      return this.filters.filter(
+        (f) => !keys.includes(f.k) && f.options.length > 1
+      );
+    },
+    priceInterval() {
+      let array = [];
+      let i = 0;
+      for (i = 0; i < 7; i++) {
+        array.push(i * 500 + "-" + (i + 1) * 500 + "元");
+      }
+      array.push(i * 500 + "元以上");
+      return array;
+    },
+  },
+  created: function () {
+    //1.判断是否有请求参数
+    if (!location.search) {
+      return;
+    }
+    //2.将请求参数转为对象
+    const search = yt.parse(location.search.substring(1));
+    //3.对page对象进行初始化，防止第一次访问时page为空
+    search.page = search.page ? parseInt(search.page) : 1;
+    //4.对排序进行初始化，默认为""，代表不排序
+    search.sortBy = search.sortBy || "";
+    //5.对排序方式进行初始化，转为布尔值
+    search.descending = search.descending === "true" || false;
+    //6.对搜索项进行初始化
+    if (!search.filter) {
+      search.filter = {
+        key: "",
+      };
+    }
+    //7.记录在data的search对象中
+    this.search = search;
+    //8.发起请求，根据条件搜索
+    this.loadData();
+  },
+  methods: {
+    loadData() {
+      yt.http.post("/search/page", this.search).then((resp) => {
+        if (resp.data.result) {
+          console.log("请求成功");
+        } else {
+          alert(resp.data.message);
+          return;
+        }
+        resp.data.value.rows.forEach((goods) => {
+          let max = 0;
+          let min = 0;
+          //转换skus:把字符串转变为对象
+          goods.skus = JSON.parse(goods.skus);
+          //添加默认选中项,如果按价格排序则选出skus中价格最低的或者最高的，否则选skus中的第一个
+          if (this.search.sortBy === "price") {
+            if (this.search.descending === true) {
+              //降序，则skus中价格选最高的
+              goods.skus.forEach((sku) => {
+                if (sku.price > max) {
+                  max = sku.price;
+                }
+              });
+              goods.skusstr.forEach((sku) => {
+                if (sku.price === max) {
+                  goods.selected = sku;
+                }
+              });
+            } else {
+              //升序，则skus中价格选最低的
+              min = goods.skus[0].price;
+              goods.skus.forEach((sku) => {
+                if (sku.price < min) {
+                  min = sku.price;
+                }
+              });
+              goods.skus.forEach((sku) => {
+                if (sku.price === min) {
+                  goods.selected = sku;
+                }
+              });
+            }
+          } else {
+            goods.selected = goods.skus[0];
+          }
+        });
+        this.goodsList = resp.data.value.rows;
+        this.total = resp.data.value.total;
+        this.totalPage = resp.data.value.totalPages;
+        //初始化商品分类过滤参数
+        if (resp.data.value.categories.length === 1) {
+          yt.http
+            .get("/category/all/level/" + resp.data.value.categories[0].id)
+            .then((resp) => {
+              if (resp.data.result) {
+                this.breads = resp.data.value;
+              } else {
+                alert(resp.data.message);
+              }
+            });
+        }
+        //初始化分类过滤
+        this.filters.push({
+          k: "cid3",
+          options: resp.data.value.categories,
+        });
+        //初始化品牌过滤
+        this.filters.push({
+          k: "brandId",
+          options: resp.data.value.brands,
+        });
+        //初始化其他参数
+        resp.data.value.specs.forEach((spec) => {
+          spec.options = spec.options.map((o) => {
+            return { name: o };
+          });
+          this.filters.push(spec);
+        });
+      });
+    },
+    navPage() {
+      this.search.page = this.$refs.page.value;
+    },
+    index(i) {
+      if (this.search.page <= 3 || this.totalPage <= 5) {
+        // 如果当前页小于等于3或者总页数小于等于5
+        return i;
+      } else if (this.search.page > this.totalPage - 3) {
+        //当前页码大于totalPage-3，应该从totalPage-5开始
+        return this.totalPage - 5 + i;
+      } else if (this.search.page > 3) {
+        // 如果当前页大于3，应该从page-3开始
+        return this.search.page - 3 + i;
+      }
+    },
+    prevPage() {
+      if (this.search.page > 1) {
+        this.search.page--;
+      }
+    },
+    nextPage() {
+      if (this.search.page < this.totalPage) {
+        this.search.page++;
+      }
+    },
+    selectFilter(k, o) {
+      const obj = {};
+      Object.assign(obj, this.search);
+      if (k === "分类") {
+        obj.filter.cid3 = o.id;
+      } else if (k === "品牌") {
+        obj.filter.brandId = o.id;
+      } else {
+        obj.filter[k] = o.name;
+      }
+      this.search = obj;
+    },
+    getFilterValue(k, v) {
+      //如果没有过滤参数，直接跳过展示
+      if (!this.filters || this.filters.length === 0) {
+        return null;
+      }
+      let name = null;
+      //判断是否是品牌
+      if (k === "brandId") {
+        this.filters.forEach((f) => {
+          if (f.k === "品牌") {
+            f.options.forEach((s) => {
+              if (s.id.toString() === v) {
+                name = s.name;
+              }
+            });
+          }
+        });
+        return name;
+      }
+      return v;
+    },
+    removeFilter(k) {
+      //属性名也是变量，不能使用.
+      this.search.filter[k] = null;
+    },
+    priceFilter(v) {
+      const obj = {};
+      Object.assign(obj, this.search);
+      obj.filter["price"] = v;
+      this.search = obj;
+    },
+  },
+};
+</script>
+
+
+
+
+    <style scoped>
+* {
+  box-sizing: unset;
+}
+
+.btn-arrow,
+.btn-arrow:visited,
+.btn-arrow:link,
+.btn-arrow:active {
+  width: 46px;
+  height: 23px;
+  border: 1px solid #ddd;
+  background: #fff;
+  line-height: 23px;
+  font-family: "\5b8b\4f53";
+  text-align: center;
+  font-size: 16px;
+  color: #aaa;
+  text-decoration: none;
+outline: none;
+}
+
+.btn-arrow:hover {
+  background-color: #1299ec;
+  color: whitesmoke;
+}
+
+.top-pagination {
+  display: block;
+  padding: 3px 15px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  color: #999;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  float: right;
+  margin-top: 6px;
+}
+
+.top-pagination span {
+  margin-right: 10px;
+}
+
+.logo-list li {
+  padding: 8px;
+}
+
+.logo-list li:hover {
+  background-color: #f3f3f3;
+}
+
+.type-list a:hover {
+  color: #1299ec;
+}
+
+.skus {
+  list-style: none;
+}
+
+.skus li {
+  list-style: none;
+  display: inline-block;
+
+  margin-left: 2px;
+  border: 2px solid #f3f3f3;
+}
+
+.skus li.selected {
+  border: 2px solid #dd1144;
+}
+
+.skus img {
+  width: 25px;
+  height: 25px;
+}
+
+img[lazy="loading"] {
+  /*width: 100px;*/
+  background-position: center center !important;
+  /*background: url("img/lazy/loading.gif");*/
+  background-size: 100px 100px;
+  background-repeat: no-repeat;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+img[lazy="error"] {
+  /*width: 100px;*/
+  background-position: center center !important;
+  /*background: url("img/lazy/error.png");*/
+  background-size: 100px 100px;
+  background-repeat: no-repeat;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+img[lazy="loaded"] {
+  /*width: 100px;*/
+  background-position: center center !important;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  background-color: green;
+}
+</style>
+
+
