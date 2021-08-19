@@ -5,13 +5,13 @@ using System.Text;
 namespace CC.ElectronicCommerce.Model.DTO
 {
 
-	public class BrandBo
-	{
-		private long id;
-		private string name;
-		private string image;
-		private List<long> cids;
-		private char letter;
+    public class BrandBo
+    {
+        private long id { get; set; }
+        private string name { get; set; }
+        private string image { get; set; }
+        private List<long> cids { get; set; }
+        private char letter { get; set; }
 
-	}
+    }
 }

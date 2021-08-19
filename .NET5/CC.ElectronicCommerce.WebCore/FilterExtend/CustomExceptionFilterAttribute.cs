@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Zhaoxi.AgileFramework.Common.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using CC.ElectronicCommerce.Common.Models;
 
-namespace Zhaoxi.AgileFramework.WebCore.FilterExtend
+namespace CC.ElectronicCommerce.WebCore.FilterExtend
 {
     public class CustomExceptionFilterAttribute : IExceptionFilter
     {
@@ -22,12 +22,8 @@ namespace Zhaoxi.AgileFramework.WebCore.FilterExtend
         {
             if (context.ExceptionHandled == false)
             {
-                context.Result = new JsonResult(new AjaxResult()
-                {
-                    Message = "操作失败",
-                    OtherValue = context.Exception.Message,
-                    Result = false
-                });
+                context.Result = new JsonResult(
+                    Result.Error("操作失败").SetData(context.Exception.Message));
                 string url = context.HttpContext.Request.Path.Value;
                 string actionName = context.ActionDescriptor.DisplayName;
 

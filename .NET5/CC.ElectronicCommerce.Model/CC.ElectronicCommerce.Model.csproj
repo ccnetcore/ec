@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CC.ElectronicCommerce.Common\CC.ElectronicCommerce.Common.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.DTOModel\CC.ElectronicCommerce.DTOModel.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,9 +7,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CC.ElectronicCommerce.Common\CC.ElectronicCommerce.Common.csproj" />
+    <ProjectReference Include="..\CC.ElectronicCommerce.Core\CC.ElectronicCommerce.Core.csproj" />
     <ProjectReference Include="..\CC.ElectronicCommerce.DTOModel\CC.ElectronicCommerce.DTOModel.csproj" />
   </ItemGroup>
 

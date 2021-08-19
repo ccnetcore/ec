@@ -1,5 +1,6 @@
 using CC.ElectronicCommerce.AuthenticationCenter.Utility;
 using CC.ElectronicCommerce.Core.ConsulExtend;
+using CC.ElectronicCommerce.WebCore.FilterExtend;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -33,7 +34,10 @@ namespace CC.ElectronicCommerce.AuthenticationCenter
             services.Configure<JWTTokenOptions>(Configuration.GetSection("JWTTokenOptions"));
             services.AddTransient<HttpHelperService>();
             #endregion
-            services.AddControllers();
+            services.AddControllers(option => {
+                option.Filters.Add<CustomExceptionFilterAttribute>();
+                option.Filters.Add(typeof(LogActionFilterAttribute));
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CC.ElectronicCommerce.AuthenticationCenter", Version = "v1" });

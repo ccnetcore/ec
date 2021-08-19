@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using CC.ElectronicCommerce.Common.Models;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Zhaoxi.AgileFramework.Common.Models;
 
-namespace Zhaoxi.AgileFramework.WebCore.FilterExtend
+namespace CC.ElectronicCommerce.WebCore.FilterExtend
 {
     public class LogActionFilterAttribute : ActionFilterAttribute
     {

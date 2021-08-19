@@ -4,9 +4,14 @@ using CC.ElectronicCommerce.Core.ConsulExtend;
 using CC.ElectronicCommerce.Interface;
 using CC.ElectronicCommerce.Model;
 using CC.ElectronicCommerce.Service;
+using Com.Ctrip.Framework.Apollo;
+using Com.Ctrip.Framework.Apollo.Core;
+using Com.Ctrip.Framework.Apollo.Enums;
+using Com.Ctrip.Framework.Apollo.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace CC.ElectronicCommerce.StaticPageProcessor
@@ -20,22 +25,22 @@ namespace CC.ElectronicCommerce.StaticPageProcessor
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                // .ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
-                // {
-                //     LogManager.UseConsoleLogging(Com.Ctrip.Framework.Apollo.Logging.LogLevel.Trace);
-                //     configurationBuilder
-                //         .AddApollo(configurationBuilder.Build().GetSection("apollo"))
-                //         .AddDefault()
-                //         .AddNamespace("ZhaoxiMSAPrivateJson", ConfigFileFormat.Json)//自定义的private     NameSpace
-                //         .AddNamespace(ConfigConsts.NamespaceApplication);//Apollo中默认       NameSpace的名称
-                //     ;
-                // })
-                //.ConfigureLogging(loggingBuilder =>
-                //{
-                //    loggingBuilder.AddFilter("System", Microsoft.Extensions.Logging.LogLevel.Warning);
-                //    loggingBuilder.AddFilter("Microsoft", Microsoft.Extensions.Logging.LogLevel.Warning);
-                //    loggingBuilder.AddLog4Net();
-                //})
+                            .ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
+                            {
+                                configurationBuilder.AddCommandLine(args);
+                                LogManager.UseConsoleLogging(Com.Ctrip.Framework.Apollo.Logging.LogLevel.Trace);
+                                configurationBuilder
+                                    .AddApollo(configurationBuilder.Build().GetSection("apollo"))
+                                    .AddDefault()
+                                    .AddNamespace("CCECJson", ConfigFileFormat.Json)//自定义的private NameSpace
+                                    .AddNamespace(ConfigConsts.NamespaceApplication);//Apollo中默认NameSpace的名称
+                            })
+                            .ConfigureLogging(loggingBuilder =>
+                            {
+                                loggingBuilder.AddFilter("System", Microsoft.Extensions.Logging.LogLevel.Warning);
+                                loggingBuilder.AddFilter("Microsoft", Microsoft.Extensions.Logging.LogLevel.Warning);
+                                loggingBuilder.AddLog4Net();
+                            })
                 .ConfigureServices((hostContext, services) =>
                 {
 

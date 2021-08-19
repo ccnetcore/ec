@@ -20,6 +20,7 @@ using CC.ElectronicCommerce.Interface;
 using CC.ElectronicCommerce.Service;
 using CC.ElectronicCommerce.Core.ConsulExtend;
 using CC.ElectronicCommerce.Core;
+using CC.ElectronicCommerce.WebCore.FilterExtend;
 
 namespace CC.ElectronicCommerce.UserMicroservice
 {
@@ -36,7 +37,10 @@ namespace CC.ElectronicCommerce.UserMicroservice
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddControllers(option => {
+                option.Filters.Add<CustomExceptionFilterAttribute>();
+                option.Filters.Add(typeof(LogActionFilterAttribute));
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CC.ElectronicCommerce.UserMicroservice", Version = "v1" });
