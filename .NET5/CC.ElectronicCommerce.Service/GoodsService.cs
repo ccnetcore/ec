@@ -16,6 +16,7 @@ namespace CC.ElectronicCommerce.Service
 {
     public class GoodsService : IGoodsService
     {
+
         private OrangeContext _orangeContext;
         private CacheClientDB _cacheClientDB;
 
@@ -195,137 +196,137 @@ namespace CC.ElectronicCommerce.Service
         ///// 添加秒杀商品
         ///// </summary>
         ///// <param name="seckillParameter"></param>
-        //public void AddSeckillGoods(SeckillParameter seckillParameter)
-        //{
-        //    //1.根据sku_id查询商品
-        //    TbSku sku = _orangeContext.TbSku.First(sku => sku.Id == seckillParameter.Id);
-        //    DateTimeFormatInfo dtFormat = new DateTimeFormatInfo();
-        //    dtFormat.ShortDatePattern = "yyyy-MM-dd HH:mm:ss";
+        public void AddSeckillGoods(SeckillParameter seckillParameter)
+        {
+            //1.根据sku_id查询商品
+            TbSku sku = _orangeContext.TbSku.First(sku => sku.Id == seckillParameter.Id);
+            DateTimeFormatInfo dtFormat = new DateTimeFormatInfo();
+            dtFormat.ShortDatePattern = "yyyy-MM-dd HH:mm:ss";
 
 
-        //    IDbContextTransaction trans = null;
-        //    try
-        //    {
-        //        trans = this._orangeContext.Database.BeginTransaction();
+            IDbContextTransaction trans = null;
+            try
+            {
+                trans = this._orangeContext.Database.BeginTransaction();
 
-        //        //2.插入到秒杀商品表中
-        //        TbSeckillSku seckillGoods = new TbSeckillSku()
-        //        {
-        //            Enable = true,
-        //            StartTime = Convert.ToDateTime(seckillParameter.StartTime, dtFormat),
-        //            EndTime = Convert.ToDateTime(seckillParameter.EndTime, dtFormat),
-        //            Image = sku.Images,
-        //            SkuId = sku.Id,
-        //            Title = sku.Title,
-        //            SeckillPrice = sku.Price * seckillParameter.Discount,
-        //            Stock = seckillParameter.Count
-        //        };
-        //        _orangeContext.TbSeckillSku.Add(seckillGoods);
+                //2.插入到秒杀商品表中
+                TbSeckillSku seckillGoods = new TbSeckillSku()
+                {
+                    Enable = true,
+                    StartTime = Convert.ToDateTime(seckillParameter.StartTime, dtFormat),
+                    EndTime = Convert.ToDateTime(seckillParameter.EndTime, dtFormat),
+                    Image = sku.Images,
+                    SkuId = sku.Id,
+                    Title = sku.Title,
+                    SeckillPrice = sku.Price * seckillParameter.Discount,
+                    Stock = seckillParameter.Count
+                };
+                _orangeContext.TbSeckillSku.Add(seckillGoods);
 
-        //        //3.更新对应的库存信息，tb_stock
-        //        TbStock stock = _orangeContext.TbStock.First(s => s.SkuId == sku.Id);
+                //3.更新对应的库存信息，tb_stock
+                TbStock stock = _orangeContext.TbStock.First(s => s.SkuId == sku.Id);
 
-        //        if (stock == null || stock.Stock - seckillGoods.Stock < 0)
-        //        {
-        //            throw new Exception("参与秒杀的库存不足");
-        //        }
+                if (stock == null || stock.Stock - seckillGoods.Stock < 0)
+                {
+                    throw new Exception("参与秒杀的库存不足");
+                }
 
-        //        if (_orangeContext.SaveChanges() > 0)
-        //        {
-        //            stock.SeckillStock = stock.SeckillStock != null ? stock.SeckillStock + seckillParameter.Count : seckillParameter.Count;
-        //            stock.SeckillTotal = stock.SeckillTotal != null ? stock.SeckillTotal + seckillParameter.Count : seckillParameter.Count;
-        //            stock.Stock = stock.Stock - seckillParameter.Count;
-        //            _orangeContext.TbStock.Update(stock);
-        //            _orangeContext.SaveChanges();
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("添加秒杀商品失败");
-        //        }
+                if (_orangeContext.SaveChanges() > 0)
+                {
+                    stock.SeckillStock = stock.SeckillStock != null ? stock.SeckillStock + seckillParameter.Count : seckillParameter.Count;
+                    stock.SeckillTotal = stock.SeckillTotal != null ? stock.SeckillTotal + seckillParameter.Count : seckillParameter.Count;
+                    stock.Stock = stock.Stock - seckillParameter.Count;
+                    _orangeContext.TbStock.Update(stock);
+                    _orangeContext.SaveChanges();
+                }
+                else
+                {
+                    throw new Exception("添加秒杀商品失败");
+                }
 
-        //        //4.更新redis中的秒杀库存(预热到redis中)---goods展示/stock控制库存的
-        //        //UpdateSeckillStock();
-        //        {
-        //            SeckillGoods goods = new SeckillGoods();
-        //            goods.CurrentTime = seckillGoods.EndTime;
-        //            goods.Enable = seckillGoods.Enable;
-        //            goods.Id = seckillGoods.Id;
-        //            goods.Image = seckillGoods.Image;
-        //            goods.SeckillPrice = seckillGoods.SeckillPrice;
-        //            goods.SkuId = seckillGoods.SkuId;
-        //            goods.Stock = stock.SeckillStock;
-        //            goods.Title = seckillGoods.Title;
-        //            goods.SeckillTotal = stock.SeckillTotal;
-        //            this._cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_GOODS, seckillGoods.SkuId.ToString(), JsonConvert.SerializeObject(goods));
-        //            this._cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, seckillGoods.SkuId.ToString(), stock.SeckillStock);
-        //        }
+                //4.更新redis中的秒杀库存(预热到redis中)---goods展示/stock控制库存的
+                //UpdateSeckillStock();
+                {
+                    SeckillGoods goods = new SeckillGoods();
+                    goods.CurrentTime = seckillGoods.EndTime;
+                    goods.Enable = seckillGoods.Enable;
+                    goods.Id = seckillGoods.Id;
+                    goods.Image = seckillGoods.Image;
+                    goods.SeckillPrice = seckillGoods.SeckillPrice;
+                    goods.SkuId = seckillGoods.SkuId;
+                    goods.Stock = stock.SeckillStock;
+                    goods.Title = seckillGoods.Title;
+                    goods.SeckillTotal = stock.SeckillTotal;
+                    this._cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_GOODS, seckillGoods.SkuId.ToString(), JsonConvert.SerializeObject(goods));
+                    this._cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, seckillGoods.SkuId.ToString(), stock.SeckillStock);
+                }
 
-        //        trans.Commit();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex);
-        //        if (trans != null)
-        //            trans.Rollback();
-        //        throw;
-        //    }
-        //}
+                trans.Commit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                if (trans != null)
+                    trans.Rollback();
+                throw;
+            }
+        }
 
-        ///// <summary>
-        ///// 更新秒杀商品数量
-        ///// </summary>
-        //public void UpdateSeckillStock()
-        //{
-        //    //1.查询可以秒杀的商品
-        //    List<SeckillGoods> seckillGoods = QuerySeckillGoods();
-        //    if (seckillGoods == null || seckillGoods.Count == 0)
-        //    {
-        //        throw new Exception("没有找到可秒杀的商品");
-        //    }
-
-
-        //    // 如果秒杀商品存在就直接删除
-        //    if (_cacheClientDB.GetHashKeys(SeckillService.KEY_PREFIX_STOCK) != null)
-        //    {
-        //        _cacheClientDB.Remove(SeckillService.KEY_PREFIX_STOCK);
-        //    }
-
-        //    //// TODO 应该把剩余库存更新到秒杀库存表
-        //    //seckillGoods.ForEach(goods => _cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, goods.SkuId.ToString(), goods.Stock.ToString()));
-
-        //    seckillGoods.ForEach(goods => _cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, goods.SkuId.ToString(), JsonConvert.SerializeObject(goods)));
-        //}
-
-        ///// <summary>
-        ///// 查询秒杀商品
-        ///// </summary>
-        ///// <returns></returns>
-        //public List<SeckillGoods> QuerySeckillGoods()
-        //{
-        //    var list = _orangeContext.TbSeckillSku.AsParallel();
-        //    // 可以秒杀 
-        //    list = list.Where(m => m.Enable == true);
-        //    List<TbSeckillSku> tbSeckillSkus = list.ToList();
-        //    List<SeckillGoods> seckillGoods = new List<SeckillGoods>();
-        //    foreach (var item in tbSeckillSkus)
-        //    {
-        //        var stock = _orangeContext.TbStock.Where(m => m.SkuId == item.SkuId).FirstOrDefault();
-        //        SeckillGoods goods = new SeckillGoods();
-        //        goods.CurrentTime = item.EndTime;
-        //        goods.Enable = item.Enable;
-        //        goods.Id = item.Id;
-        //        goods.Image = item.Image;
-        //        goods.SeckillPrice = item.SeckillPrice;
-        //        goods.SkuId = item.SkuId;
-        //        goods.Stock = stock.SeckillStock;
-        //        goods.Title = item.Title;
-        //        goods.SeckillTotal = stock.SeckillTotal;
-
-        //        seckillGoods.Add(goods);
-        //    }
+        /// <summary>
+        /// 更新秒杀商品数量
+        /// </summary>
+        public void UpdateSeckillStock()
+        {
+            //1.查询可以秒杀的商品
+            List<SeckillGoods> seckillGoods = QuerySeckillGoods();
+            if (seckillGoods == null || seckillGoods.Count == 0)
+            {
+                throw new Exception("没有找到可秒杀的商品");
+            }
 
 
-        //    return seckillGoods;
-        //}
+            // 如果秒杀商品存在就直接删除
+            if (_cacheClientDB.GetHashKeys(SeckillService.KEY_PREFIX_STOCK) != null)
+            {
+                _cacheClientDB.Remove(SeckillService.KEY_PREFIX_STOCK);
+            }
+
+            //// TODO 应该把剩余库存更新到秒杀库存表
+            //seckillGoods.ForEach(goods => _cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, goods.SkuId.ToString(), goods.Stock.ToString()));
+
+            seckillGoods.ForEach(goods => _cacheClientDB.SetEntryInHash(SeckillService.KEY_PREFIX_STOCK, goods.SkuId.ToString(), JsonConvert.SerializeObject(goods)));
+        }
+
+        /// <summary>
+        /// 查询秒杀商品
+        /// </summary>
+        /// <returns></returns>
+        public List<SeckillGoods> QuerySeckillGoods()
+        {
+            var list = _orangeContext.TbSeckillSku.AsParallel();
+            // 可以秒杀 
+            list = list.Where(m => m.Enable == true);
+            List<TbSeckillSku> tbSeckillSkus = list.ToList();
+            List<SeckillGoods> seckillGoods = new List<SeckillGoods>();
+            foreach (var item in tbSeckillSkus)
+            {
+                var stock = _orangeContext.TbStock.Where(m => m.SkuId == item.SkuId).FirstOrDefault();
+                SeckillGoods goods = new SeckillGoods();
+                goods.CurrentTime = item.EndTime;
+                goods.Enable = item.Enable;
+                goods.Id = item.Id;
+                goods.Image = item.Image;
+                goods.SeckillPrice = item.SeckillPrice;
+                goods.SkuId = item.SkuId;
+                goods.Stock = stock.SeckillStock;
+                goods.Title = item.Title;
+                goods.SeckillTotal = stock.SeckillTotal;
+
+                seckillGoods.Add(goods);
+            }
+
+
+            return seckillGoods;
+        }
     }
 }

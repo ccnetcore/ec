@@ -32,12 +32,12 @@ namespace CC.ElectronicCommerce.Interface
         void DecreaseStock(List<CartDto> cartDtos);
 
 
-        //List<SeckillGoods> QuerySeckillGoods();
+        List<SeckillGoods> QuerySeckillGoods();
 
         ///**
         // * 添加秒杀商品
         // * @param seckillParameter
         // */
-        //void AddSeckillGoods(SeckillParameter seckillParameter);
+        void AddSeckillGoods(SeckillParameter seckillParameter);
     }
 }

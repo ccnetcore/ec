@@ -25,4 +25,10 @@
     <ProjectReference Include="..\CC.ElectronicCommerce.WebCore\CC.ElectronicCommerce.WebCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
