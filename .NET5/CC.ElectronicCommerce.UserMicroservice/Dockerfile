@@ -8,7 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS build
 ADD http://ftp.us.debian.org/debian/pool/main/c/ca-certificates/ca-certificates_20210119_all.deb .
 RUN dpkg -i ca-certificates_20210119_all.deb
-RUN apt-get update && apt-get install -y ca-certificates && update-cacertificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ["CC.ElectronicCommerce.UserMicroservice/CC.ElectronicCommerce.UserMicroservice.csproj", "CC.ElectronicCommerce.UserMicroservice/"]
 COPY ["CC.ElectronicCommerce.Interface/CC.ElectronicCommerce.Interface.csproj", "CC.ElectronicCommerce.Interface/"]
